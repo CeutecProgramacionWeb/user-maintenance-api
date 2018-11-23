@@ -2,6 +2,9 @@ var express    = require('express');
 var app        = express();                 
 var bodyParser = require('body-parser');
 
+var cors = require('cors')
+app.use(cors())
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -9,23 +12,23 @@ var port = process.env.PORT || 8080;
 
 var router = express.Router();
 
-var users = [{id: 1, username: "cvarela", password: "cgvm123"}];
+var rolesId = 2;
+var usersId = 1;
+var users = [{id: 1, username: "cvarela", password: "test", roleId : 1}];
 var roles = [{id:1, description: "admin"}, {id: 2, description: "normal"}];
-var userRoles = [{userId: 1, roleId:2}, {userId: 1, roleId:1}];
 
 router.use(function(req, res, next) {
     console.log('Something is happening.');
     next();
 });
 
-function getRolesByUser(userId){
-    let result = [];
-    for (let i = 0; i < userRoles.length; i++) {
-        if (userRoles[i].userId === userId) {
-            result.push(getRoleById(userRoles[i].roleId));
+function getRoleDescription(id){
+    for(let i = 0; i< roles.length; i++){
+        if(roles[i].id === id){
+            return roles[i].description;
         }
     }
-    return result;
+    return null;
 }
 
 function getRoleById(id){
@@ -50,7 +53,7 @@ router.route('/users')
     .get(function(req, res){
         let data = [];
         for (let i = 0; i < users.length; i++) {
-            let userModel = {id: users[i].id, username: users[i].username, password: users[i].password, roles: getRolesByUser(users[i].id)};
+            let userModel = {id: users[i].id, username: users[i].username, password: users[i].password, roleDescription: getRoleDescription(users[i].roleId), roleId: users[i].roleId };
             data.push(userModel);
         }
         res.json(data)
@@ -64,7 +67,8 @@ router.route('/users/:id')
         if(user == null){
             res.json({error: "User Not Found"});
         }
-        return res.json(user);
+        let userModel = {id: user.id, username: user.username, password: user.password, roleDescription: getRoleDescription(user.roleId), roleId: user.roleId };
+        return res.json(userModel);
     });
 
     router.route('/users/:id')
@@ -77,6 +81,7 @@ router.route('/users/:id')
         }
         existingUser.username = user.username;
         existingUser.password = user.password; 
+        existingUser.roleId = user.roleId;
         res.json(user);
     });
     
@@ -88,7 +93,8 @@ router.route('/roles')
 
 router.route("/roles")
     .post(function(req, res){
-        let role = req.body;
+        let roleDescription = req.body.description;
+        let role = {id: ++rolesId, description: roleDescription};
         roles.push(role);
         res.json(role);
     });
