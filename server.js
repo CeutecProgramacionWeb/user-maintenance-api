@@ -59,6 +59,16 @@ router.route('/users')
         res.json(data)
     });
 
+router.route('/users')
+    .post(function(req, res){
+        let username = req.body.username;
+        let password = req.body.password;
+        let roleId = req.body.roleId;
+        let newUser = {id : ++usersId, username: username, password: password, roleId: roleId};
+        users.push(newUser);
+        let result = {id : usersId, username: username, password: password, roleId: roleId, roleDescription: getRoleDescription(roleId) };
+        res.json(result);
+    });
 
 router.route('/users/:id')
     .get(function(req, res){
